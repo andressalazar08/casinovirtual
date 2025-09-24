@@ -76,15 +76,33 @@ El backend implementa la lógica principal del juego tragamonedas, asegurando re
 - Si todos los símbolos de la línea central son iguales, se considera un giro ganador.
 - El pago se calcula multiplicando la apuesta por el multiplicador del símbolo ganador.
 
+
 ### 3. Flujo de una Jugada
 
-1. El usuario realiza una apuesta y solicita un giro.
-2. El backend genera los símbolos aleatorios usando el RNG.
-3. Se verifica si la combinación es ganadora y se calcula el premio.
-4. Se actualiza el saldo del usuario y se registra la jugada en la base de datos (`SlotSpin`).
-5. El backend responde con el resultado del giro, los símbolos y el monto ganado (si aplica).
+1. El usuario se registra y hace login en la plataforma.
+2. Realiza una apuesta y solicita un giro (`POST /api/slots/spin`).
+3. El backend genera los símbolos aleatorios usando el RNG.
+4. Se verifica si la combinación es ganadora y se calcula el premio.
+5. Se actualiza el saldo del usuario y se registra la jugada en la base de datos (`SlotSpin`).
+6. El backend responde con el resultado del giro, los símbolos y el monto ganado (si aplica).
+7. El usuario puede consultar su historial de jugadas (`GET /api/slots/history`) y su saldo (`GET /api/slots/balance`).
 
-Estas funciones aseguran transparencia y trazabilidad en cada jugada del juego tragamonedas.
+## Ejemplo de flujo completo usando la API
+
+1. **Registro de usuario**
+	- `POST /api/auth/register` con body `{ "username": "usuario", "email": "correo@ejemplo.com", "password": "clave" }`
+2. **Login**
+	- `POST /api/auth/login` con body `{ "email": "correo@ejemplo.com", "password": "clave" }`
+3. **Consultar símbolos y pagos**
+	- `GET /api/slots/symbols`
+4. **Realizar un giro**
+	- `POST /api/slots/spin` con body `{ "betAmount": 100 }`
+5. **Consultar historial de jugadas**
+	- `GET /api/slots/history`
+6. **Consultar saldo**
+	- `GET /api/slots/balance`
+
+> Nota: Para probar el flujo completo, puedes usar Postman o una herramienta similar. Recuerda que las rutas de tragamonedas requieren autenticación por sesión.
 ```
 
 La aplicación frontend estará disponible en `http://localhost:3000` y el backend en el puerto configurado (por defecto `http://localhost:5000`).
