@@ -60,8 +60,32 @@ cd frontend/casinofrontend
 npm run dev
 ```
 
+## Lógica del Juego Tragamonedas (Backend)
+
+El backend implementa la lógica principal del juego tragamonedas, asegurando resultados justos y registro de cada jugada. Las funciones clave son:
+
+### 1. Generador de Números Aleatorios (RNG)
+
+- La función `generateRandomReels` simula los rodillos de la máquina tragamonedas, seleccionando símbolos aleatorios para cada rodillo a partir de los símbolos definidos en la base de datos.
+- El número de rodillos y símbolos por rodillo es configurable.
+- El resultado es una matriz que representa los símbolos visibles tras cada giro.
+
+### 2. Verificación de Líneas de Pago
+
+- La función `checkWinningLine` evalúa la línea central de los rodillos para determinar si hay una combinación ganadora.
+- Si todos los símbolos de la línea central son iguales, se considera un giro ganador.
+- El pago se calcula multiplicando la apuesta por el multiplicador del símbolo ganador.
+
+### 3. Flujo de una Jugada
+
+1. El usuario realiza una apuesta y solicita un giro.
+2. El backend genera los símbolos aleatorios usando el RNG.
+3. Se verifica si la combinación es ganadora y se calcula el premio.
+4. Se actualiza el saldo del usuario y se registra la jugada en la base de datos (`SlotSpin`).
+5. El backend responde con el resultado del giro, los símbolos y el monto ganado (si aplica).
+
+Estas funciones aseguran transparencia y trazabilidad en cada jugada del juego tragamonedas.
+```
+
 La aplicación frontend estará disponible en `http://localhost:3000` y el backend en el puerto configurado (por defecto `http://localhost:5000`).
 
-## Contribución
-
-Las contribuciones son bienvenidas. Por favor, abre un issue o envía un pull request para sugerencias y mejoras.
