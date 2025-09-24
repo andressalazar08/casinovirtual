@@ -2,8 +2,10 @@ const express = require("express");
 const session = require("express-session");
 const sequelize = require("./sequelize");
 
+
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
+const slotRoutes = require("./routes/slot");
 
 const app = express();
 
@@ -16,8 +18,10 @@ app.use(session({
 }));
 
 
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/slots", slotRoutes);
 
 const port = 3000;
 

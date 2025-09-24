@@ -24,6 +24,11 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  saldo: {
+    type: DataTypes.DECIMAL(10,2),
+    allowNull: false,
+    defaultValue: 1000.00 // Saldo inicial, puedes ajustarlo
+  },
   activo: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
