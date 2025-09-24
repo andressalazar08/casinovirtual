@@ -1,7 +1,9 @@
 const express = require("express");
 const session = require("express-session");
 const sequelize = require("./sequelize");
+
 const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/user");
 
 const app = express();
 
@@ -13,7 +15,9 @@ app.use(session({
     cookie: { secure: false } // Cambia a true si usas HTTPS
 }));
 
+
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 const port = 3000;
 
