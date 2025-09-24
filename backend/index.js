@@ -17,8 +17,16 @@ app.use("/api/auth", authRoutes);
 
 const port = 3000;
 
-sequelize.sync().then(() => {
-    app.listen(port, () => {
-        console.log(`servidor corriendo en ${port}`);
+sequelize.authenticate()
+    .then(() => {
+        console.log('Conexión a la base de datos exitosa.');
+        return sequelize.sync();
+    })
+    .then(() => {
+        app.listen(port, () => {
+            console.log(`servidor corriendo en ${port}`);
+        });
+    })
+    .catch((err) => {
+        console.error('No se pudo conectar a la base de datos:', err);
     });
-});
