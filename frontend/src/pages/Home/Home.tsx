@@ -4,6 +4,7 @@ import SlotMachine from '../../components/SlotMachine/SlotMachine';
 import GameInfo from '../../components/SlotMachine/GameInfo';
 import GameControls from '../../components/SlotMachine/GameControls';
 import BetControls from '../../components/SlotMachine/BetControls';
+import { slotService } from '../../services';
 import './Home.css';
 
 const SYMBOLS = ['🍒', '🍋', '🍊', '🍉', '⭐', '💎', '7️⃣'];
@@ -41,40 +42,55 @@ const Home: React.FC = () => {
     setTotalBet(lines * bet);
   }, [lines, bet]);
 
+  // Cargar saldo inicial si el usuario está autenticado
+  useEffect(() => {
+    const loadBalance = async () => {
+      try {
+        const balance = await slotService.getBalance();
+        setCredits(balance.saldo);
+      } catch (error) {
+        console.log('Usuario no autenticado o error al cargar saldo');
+        // Mantener el saldo por defecto para usuarios no autenticados
+      }
+    };
+
+    loadBalance();
+  }, []);
+
   // Funciones del juego
-  const spinReels = () => {
+  const spinReels = async () => {
     if (spinning || credits < totalBet) return;
 
     setSpinning(true);
-    setCredits(prev => prev - totalBet);
     setPaid(0);
     setWinEffect(false);
 
-    setTimeout(() => {
-      const newReels = reels.map(() => {
-        const newReel = [];
-        for (let i = 0; i < 5; i++) {
-          newReel.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
-        }
-        return newReel;
-      });
-
-      setReels(newReels);
-      setSpinning(false);
-
+    try {
+      // Llamar al backend para realizar el giro
+      const result = await slotService.spin(totalBet);
+      
+      // Simular el delay visual antes de mostrar resultados
       setTimeout(() => {
-        const middleLine = newReels.map(reel => reel[2]);
-        const allSame = middleLine.every(symbol => symbol === middleLine[0]);
-        
-        if (allSame) {
-          const winAmount = totalBet * 10;
-          setPaid(winAmount);
-          setCredits(prev => prev + winAmount);
-          setWinEffect(true);
-          setTimeout(() => setWinEffect(false), 2000);
-        }
-      }, 500);
-    }, 2000);
+        setReels(result.reels);
+        setSpinning(false);
+
+        // Mostrar resultados después del giro
+        setTimeout(() => {
+          setPaid(result.payout);
+          setCredits(result.saldo);
+          
+          if (result.win) {
+            setWinEffect(true);
+            setTimeout(() => setWinEffect(false), 2000);
+          }
+        }, 500);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error en el giro:', error);
+      setSpinning(false);
+      alert(`Error al realizar el giro: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    }
   };
 
   const setMaxLines = () => setLines(20);

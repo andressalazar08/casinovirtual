@@ -5,10 +5,10 @@ const symbolController = require('../controllers/symbolController');
 const isAuthenticated = require('../middlewares/isAuthenticated');
 
 
-// Proteger rutas de juego (excepto /symbols)
-router.post('/spin', isAuthenticated, slotController.spin);
-router.get('/history', isAuthenticated, slotController.history);
-router.get('/balance', isAuthenticated, slotController.balance);
+// Rutas de juego (modo demo permite acceso sin autenticación)
+router.post('/spin', slotController.spin);
+router.get('/history', isAuthenticated, slotController.history); // Solo historial requiere auth
+router.get('/balance', slotController.balance);
 // Listar símbolos y pagos (pública)
 router.get('/symbols', symbolController.listSymbols);
 

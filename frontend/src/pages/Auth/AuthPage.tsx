@@ -4,6 +4,7 @@ import AuthHeader from '../../components/Auth/AuthHeader';
 import LoginForm from '../../components/Auth/LoginForm';
 import RegisterForm from '../../components/Auth/RegisterForm';
 import AuthFooter from '../../components/Auth/AuthFooter';
+import { authService, LoginCredentials, RegisterData } from '../../services';
 import './AuthPage.css';
 
 const AuthPage: React.FC = () => {
@@ -20,31 +21,49 @@ const AuthPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogin = async (credentials: { email: string; password: string }) => {
+  const handleLogin = async (credentials: LoginCredentials) => {
     setIsLoading(true);
     
-    // Simular proceso de login
-    setTimeout(() => {
+    try {
+      const response = await authService.login(credentials);
+      console.log('Login exitoso:', response);
+      // Guardar información del usuario si es necesario
+      localStorage.setItem('user', JSON.stringify(response.user));
+      // Redirigir al home después del login exitoso
+      navigate('/');
+    } catch (error) {
+      console.error('Error en login:', error);
+      alert(`Error al iniciar sesión: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    } finally {
       setIsLoading(false);
-      console.log('Login attempt:', credentials);
-      // TODO: Implementar lógica real de autenticación
-      // navigate('/dashboard'); // Descomenta cuando tengas el dashboard
-    }, 2000);
+    }
   };
 
-  const handleRegister = async (userData: { 
-    username: string; 
-    email: string; 
-    password: string; 
-    confirmPassword: string 
-  }) => {
+  const handleRegister = async (userData: RegisterData & { confirmPassword: string }) => {
     setIsLoading(true);
     
-    setTimeout(() => {
+    try {
+      // Validar que las contraseñas coincidan
+      if (userData.password !== userData.confirmPassword) {
+        alert('Las contraseñas no coinciden');
+        return;
+      }
+
+      // Extraer solo los datos necesarios para el registro
+      const { username, email, password } = userData;
+      const response = await authService.register({ username, email, password });
+      
+      console.log('Registro exitoso:', response);
+      alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+      
+      // Cambiar a la vista de login
+      setShowRegister(false);
+    } catch (error) {
+      console.error('Error en registro:', error);
+      alert(`Error al registrarse: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    } finally {
       setIsLoading(false);
-      console.log('Register attempt:', userData);
-      // TODO: Implementar lógica real de registro
-    }, 2000);
+    }
   };
 
   const handleRegisterClick = () => {

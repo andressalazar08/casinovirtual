@@ -1,6 +1,4 @@
-/* Importar estilos base */
-@import './base/reset.css';
-@import './base/animations.css';
+/* Variables globales del casino - sin imports por ahora */
 
 /* Variables globales del casino */
 :root {

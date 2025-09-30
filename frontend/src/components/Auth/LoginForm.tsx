@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { authService, LoginCredentials } from '../../services';
 import './LoginForm.css';
 
 interface LoginFormProps {
-  onSubmit: (credentials: { email: string; password: string }) => void;
+  onSubmit: (credentials: LoginCredentials) => void;
   isLoading: boolean;
 }
 

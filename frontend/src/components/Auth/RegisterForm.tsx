@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
+import { RegisterData } from '../../services';
 import './RegisterForm.css';
 
 interface RegisterFormProps {
-  onSubmit: (userData: { 
-    username: string; 
-    email: string; 
-    password: string; 
-    confirmPassword: string;
-  }) => void;
+  onSubmit: (userData: RegisterData & { confirmPassword: string }) => void;
   isLoading: boolean;
 }
 

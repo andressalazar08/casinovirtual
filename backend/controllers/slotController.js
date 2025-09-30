@@ -14,17 +14,32 @@ exports.spin = async (req, res) => {
   try {
     const userId = req.session.userId;
     const { betAmount } = req.body;
-    if (!userId) return res.status(401).json({ error: 'No autenticado' });
+    
+    // Modo demo: permite jugar sin autenticación
+    if (!userId) {
+      // Generar rodillos aleatorios (5x5 como en el frontend)
+      const reels = await generateRandomReels(5, 5);
+      // Verificar línea ganadora
+      const result = checkWinningLine(reels, betAmount);
+
+      return res.json({
+        reels,
+        win: result.win,
+        payout: result.payout,
+        saldo: 2101.00 - betAmount + result.payout, // Saldo demo
+        demo: true
+      });
+    }
+
+    // Modo autenticado: usar base de datos
     const user = await User.findByPk(userId);
     if (!user || !user.activo) return res.status(404).json({ error: 'Usuario no encontrado' });
     if (Number(user.saldo) < betAmount) return res.status(400).json({ error: 'Saldo insuficiente' });
 
-    // Obtener símbolos disponibles
-    const symbols = await Symbol.findAll();
-    // Generar rodillos aleatorios
-    const reels = await generateRandomReels(3, 3, symbols);
+    // Generar rodillos aleatorios (5x5 como en el frontend)
+    const reels = await generateRandomReels(5, 5);
     // Verificar línea ganadora
-    const result = checkWinningLine(reels, symbols, betAmount);
+    const result = checkWinningLine(reels, betAmount);
 
     // Actualizar saldo
     user.saldo = Number(user.saldo) - betAmount + result.payout;
@@ -72,7 +87,13 @@ exports.history = async (req, res) => {
 exports.balance = async (req, res) => {
   try {
     const userId = req.session.userId;
-    if (!userId) return res.status(401).json({ error: 'No autenticado' });
+    
+    // Modo demo: devolver saldo fijo
+    if (!userId) {
+      return res.json({ saldo: 2101.00, demo: true });
+    }
+
+    // Modo autenticado: usar base de datos
     const user = await User.findByPk(userId);
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
     res.json({ saldo: user.saldo });
