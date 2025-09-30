@@ -1,0 +1,61 @@
+/* Controles de apuesta */
+.bet-controls {
+  background: #001a00;
+  border: 2px solid #d4af37;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.bet-title {
+  color: #d4af37;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.bet-options {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.bet-option {
+  background: linear-gradient(145deg, #333, #222);
+  border: 1px solid #666;
+  border-radius: 4px;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 60px;
+}
+
+.bet-option:hover:not(:disabled) {
+  border-color: #d4af37;
+  transform: translateY(-1px);
+}
+
+.bet-selected {
+  background: linear-gradient(145deg, #d4af37, #b8941f);
+  border-color: #ffd700;
+  color: #000;
+  font-weight: bold;
+}
+
+.bet-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .bet-option {
+    min-width: 50px;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+}
