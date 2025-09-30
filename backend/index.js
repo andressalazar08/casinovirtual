@@ -11,7 +11,7 @@ const app = express();
 
 // Configurar CORS para permitir comunicación con el frontend
 app.use(cors({
-    origin: 'http://localhost:5174', // Puerto donde corre el frontend
+    origin: ['http://localhost:5173', 'http://localhost:5174'], // Puertos donde puede correr el frontend
     credentials: true, // Permitir cookies/sesiones
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
