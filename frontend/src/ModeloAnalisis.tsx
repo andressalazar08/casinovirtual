@@ -178,21 +178,6 @@ const ModeloAnalisis: React.FC = () => {
   const rtpTeorico = calcularRTPTeorico();
   const margenTeorico = 100 - rtpTeorico;
 
-  // Calcular proyecciones financieras
-  const calcularProyecciones = (apostadoMensual: number) => {
-    const ingresoCasino = apostadoMensual * (margenTeorico / 100);
-    return {
-      apostadoMensual,
-      ingresoCasino,
-      pagoJugadores: apostadoMensual - ingresoCasino,
-      ingresoAnual: ingresoCasino * 12
-    };
-  };
-
-  const proyeccionConservadora = calcularProyecciones(100000);
-  const proyeccionModerada = calcularProyecciones(500000);
-  const proyeccionOptimista = calcularProyecciones(1000000);
-
   return (
     <div className="modelo-analisis-container">
       {/* Header */}

@@ -353,6 +353,10 @@ function App() {
     navigate('/modelo-d-rachas');
   };
 
+  const handleAdminModeloAClick = () => {
+    navigate('/admin-modelo-a');
+  };
+
   const getStartDelay = (reelIndex: number) => {
     return reelIndex * 100;
   };
@@ -397,6 +401,10 @@ function App() {
 
         <button className="modelo-d-button" onClick={handleModeloDClick}>
           🔄 ANÁLISIS MODELO D
+        </button>
+
+        <button className="admin-modelo-a-button" onClick={handleAdminModeloAClick}>
+          ⚙️ ADMIN MODELO A
         </button>
 
         <div className="slot-machine-body">

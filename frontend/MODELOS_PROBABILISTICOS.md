@@ -52,7 +52,10 @@ Margen de la Casa = 100% - RTP
 |----------------|------------|-------------|
 | Casinos físicos tradicionales | 85% - 92% | 8% - 15% |
 | Casinos online competitivos | 92% - 98% | 2% - 8% |
-| **Recomendado para este proyecto** | **94% - 96%** | **4% - 6%** |
+| **Rango flexible para este proyecto** | **1% - 99%** | **1% - 99%** |
+| **Recomendado estándar** | **94% - 96%** | **4% - 6%** |
+
+> **Nota**: El sistema permite configurar RTP desde 1% hasta 99% para permitir simulaciones de diferentes escenarios de negocio, aunque lo recomendado para operación real es mantenerlo entre 94%-96%.
 
 ### Ejemplo Práctico
 
@@ -62,6 +65,59 @@ Con un **RTP del 95%**:
 - El casino retiene **$5,000** de ganancia (5%)
 
 ⚠️ **Importante**: El RTP es estadístico a largo plazo. Un jugador individual puede ganar o perder en el corto plazo.
+
+---
+
+### Sistema de Factor de Ajuste RTP
+
+Para alcanzar el RTP objetivo configurado por el gerente, el sistema implementa un **Factor de Ajuste** que multiplica dinámicamente los pagos.
+
+#### Fórmula del Factor de Ajuste
+
+```
+RTP_Base = Σ (P(5 símbolos_i) × Multiplicador_i) × 100
+Factor_Ajuste = RTP_Objetivo / RTP_Base
+Pago_Final = Apuesta × Multiplicador × Factor_Ajuste
+```
+
+#### Ejemplo Numérico
+
+**Configuración base:**
+- RTP_Base calculado = 0.96%
+- RTP_Objetivo del gerente = 95%
+
+```
+Factor_Ajuste = 95 / 0.96 ≈ 98.96x
+```
+
+**Aplicación en premio:**
+- Jugador apuesta: $10
+- Obtiene 5 cerezas: Multiplicador base = 2x
+- Pago sin ajuste: $10 × 2 = $20
+- **Pago final ajustado: $10 × 2 × 98.96 ≈ $1,979**
+
+Este sistema garantiza que, estadísticamente a largo plazo, el RTP real converja al objetivo configurado.
+
+#### Ventajas del Sistema
+
+✅ **Flexibilidad Total**: El gerente puede configurar cualquier RTP entre 1% y 99%  
+✅ **Ajuste Automático**: Los pagos se recalculan en tiempo real según el RTP objetivo  
+✅ **Mantiene Proporciones**: Las probabilidades de símbolos permanecen constantes  
+✅ **Simulación de Escenarios**: Permite probar diferentes modelos de negocio  
+
+#### Configuración en Panel de Administración
+
+El gerente puede:
+1. **Definir RTP objetivo** (slider 1% - 99%)
+2. **Ajustar probabilidades** de cada símbolo (debe sumar 100%)
+3. **Modificar multiplicadores** de pago por símbolo
+4. **Ver RTP base** calculado automáticamente
+5. **Ver factor de ajuste** que se aplicará a los pagos
+
+**Restricciones del sistema:**
+- Las probabilidades de todos los símbolos deben sumar exactamente 1.0 (100%)
+- Los multiplicadores deben ser números enteros positivos
+- El sistema normaliza automáticamente las probabilidades si no suman 1.0
 
 ---
 
@@ -912,7 +968,176 @@ simularJugadas(100000, 10, probabilidades, multiplicadores);
 
 ---
 
-### Anexo D: Glosario de Términos
+### Anexo D: Panel de Administración del Modelo A
+
+#### Descripción General
+
+El **Panel de Administración del Modelo A** es una herramienta visual que permite al gerente del casino personalizar completamente el comportamiento probabilístico del juego de slots.
+
+**Ruta de acceso:** `/admin-modelo-a`
+
+#### Funcionalidades Principales
+
+##### 1. Configuración de Probabilidades por Símbolo
+
+El panel permite ajustar la probabilidad individual de cada símbolo:
+
+| Campo | Rango | Descripción |
+|-------|-------|-------------|
+| Probabilidad | 0.0 - 1.0 | Frecuencia de aparición del símbolo |
+| % Individual | Auto-calculado | Porcentaje visual (Probabilidad × 100) |
+| Prob. 5 Símbolos | Auto-calculado | P^5 - Probabilidad de línea ganadora |
+
+**Validación automática:**
+- ✅ La suma de todas las probabilidades debe ser exactamente 1.0 (100%)
+- ⚠️ Si la suma no es válida, el botón "Guardar" se deshabilita
+- 🔧 Función "Normalizar" ajusta proporcionalmente para sumar 1.0
+
+##### 2. Configuración de Multiplicadores
+
+Cada símbolo tiene un multiplicador editable:
+
+```
+Pago = Apuesta × Multiplicador × Factor_Ajuste
+```
+
+| Símbolo | Multiplicador Min | Multiplicador Max | Recomendado |
+|---------|-------------------|-------------------|-------------|
+| Cereza | 1 | 1000 | 2-5 |
+| Limón | 1 | 1000 | 3-8 |
+| Naranja | 1 | 1000 | 5-15 |
+| Sandía | 1 | 1000 | 8-25 |
+| Estrella | 1 | 1000 | 15-50 |
+| Diamante | 1 | 1000 | 50-150 |
+| Siete | 1 | 1000 | 100-500 |
+
+##### 3. Panel de Resumen RTP
+
+El sistema calcula y muestra en tiempo real:
+
+```
+┌─────────────────────────────────────────────┐
+│  RTP Base (sin ajuste)     │  0.96%         │
+│  Factor de Ajuste          │  98.96x        │
+│  RTP Objetivo              │  95.00%  [▓]   │  ← Editable 1-99%
+│  Margen de la Casa         │  5.00%         │
+└─────────────────────────────────────────────┘
+```
+
+**Validaciones visuales:**
+- 🟢 Verde: Suma de probabilidades = 1.0 (válido)
+- 🔴 Rojo: Suma de probabilidades ≠ 1.0 (inválido)
+
+##### 4. Tabla de Contribución por Símbolo
+
+Vista detallada del impacto de cada símbolo en el RTP:
+
+```
+Contribución_RTP = P(5 símbolos) × Multiplicador × 100
+```
+
+Ejemplo con configuración por defecto:
+
+| Símbolo | Prob. | Mult. | Prob. 5x | Contribución RTP |
+|---------|-------|-------|----------|------------------|
+| 🍒 Cereza | 0.30 | 2 | 0.00243 | 0.486% |
+| 🍋 Limón | 0.25 | 3 | 0.00098 | 0.294% |
+| 🍊 Naranja | 0.20 | 5 | 0.00032 | 0.160% |
+| 🍉 Sandía | 0.12 | 8 | 0.00024 | 0.192% |
+| ⭐ Estrella | 0.08 | 15 | 0.00003 | 0.045% |
+| 💎 Diamante | 0.04 | 50 | 0.00000 | 0.020% |
+| 7️⃣ Siete | 0.01 | 100 | 0.00000 | 0.001% |
+| **TOTAL** | 1.00 | - | - | **≈0.96%** |
+
+##### 5. Acciones Disponibles
+
+**🔵 Normalizar Probabilidades**
+- Ajusta todas las probabilidades proporcionalmente para que sumen 1.0
+- Se deshabilita si las probabilidades ya son válidas
+
+**🟠 Restablecer por Defecto**
+- Restaura la configuración inicial del Modelo A
+- Restablece RTP objetivo a 95%
+
+**🟢 Guardar Configuración** *(Simulado - No afecta el juego actual)*
+- Guarda los parámetros configurados
+- En implementación futura: Enviará a la base de datos
+- En implementación futura: El motor del juego usará estos valores
+
+##### 6. Nota de Implementación Futura
+
+```
+⚠️ IMPORTANTE: Esta configuración actualmente es simulada 
+y no afecta el juego en tiempo real.
+
+En una implementación futura:
+✅ Los parámetros se guardarían en la base de datos
+✅ El backend leería la configuración al generar tiradas
+✅ Los cambios se aplicarían dinámicamente sin redeploy
+```
+
+#### Flujo de Uso Típico
+
+```mermaid
+graph TD
+    A[Gerente accede al panel] --> B[Revisa RTP Base actual]
+    B --> C{¿Satisfecho con RTP?}
+    C -->|No| D[Ajusta probabilidades/multiplicadores]
+    D --> E[Observa nuevo RTP calculado]
+    E --> F{¿Suma = 1.0?}
+    F -->|No| G[Click en Normalizar]
+    G --> H[Configura RTP Objetivo]
+    F -->|Sí| H
+    H --> I[Click en Guardar]
+    I --> J[Configuración guardada]
+    C -->|Sí| K[Mantiene configuración actual]
+```
+
+#### Ejemplo de Caso de Uso
+
+**Escenario**: El gerente quiere aumentar el RTP de 95% a 97% para una promoción especial.
+
+1. Accede a `/admin-modelo-a`
+2. Ve que RTP Base = 0.96%
+3. Ajusta el slider de RTP Objetivo a 97%
+4. El sistema recalcula: Factor_Ajuste = 97 / 0.96 ≈ 101.04x
+5. Observa que el margen de la casa baja a 3%
+6. Guarda la configuración (simulado)
+7. En producción futura: Los jugadores experimentarían pagos ~1% mayores
+
+#### Integración con Base de Datos (Futuro)
+
+**Tabla propuesta: `slot_configurations`**
+
+```sql
+CREATE TABLE slot_configurations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    modelo VARCHAR(50),
+    rtp_objetivo DECIMAL(5,2),
+    simbolos JSON, -- [{nombre, prob, mult}, ...]
+    activo BOOLEAN DEFAULT FALSE,
+    fecha_creacion TIMESTAMP,
+    creado_por VARCHAR(100)
+);
+```
+
+**Endpoint API propuesto:**
+
+```javascript
+// POST /api/admin/slot-config
+{
+  "modelo": "A",
+  "rtpObjetivo": 95,
+  "simbolos": [
+    {"nombre": "Cereza", "probabilidad": 0.30, "multiplicador": 2},
+    // ... resto de símbolos
+  ]
+}
+```
+
+---
+
+### Anexo E: Glosario de Términos
 
 | Término | Definición |
 |---------|------------|

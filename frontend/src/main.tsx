@@ -6,6 +6,7 @@ import Second_Page from './Second_page';
 import Casino from './Casino';
 import ModeloAnalisis from './ModeloAnalisis';
 import ModeloD_Rachas from './ModeloD_Rachas';
+import AdminModeloA from './AdminModeloA';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -20,6 +21,7 @@ root.render(
         <Route path="/casino" element={<Casino />} />
         <Route path="/modelo-analisis" element={<ModeloAnalisis />} />
         <Route path="/modelo-d-rachas" element={<ModeloD_Rachas />} />
+        <Route path="/admin-modelo-a" element={<AdminModeloA />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

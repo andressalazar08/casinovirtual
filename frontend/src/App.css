@@ -254,6 +254,31 @@ html, body, #root {
   box-shadow: 0 4px 12px rgba(102, 187, 106, 0.5);
 }
 
+.admin-modelo-a-button {
+  position: absolute;
+  top: 150px;
+  right: 15px;
+  background: linear-gradient(145deg, #ab47bc, #8e24aa);
+  border: 2px solid #ba68c8;
+  border-radius: 6px;
+  color: white;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+}
+
+.admin-modelo-a-button:hover {
+  background: linear-gradient(145deg, #8e24aa, #ab47bc);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(171, 71, 188, 0.5);
+}
+
 .slot-machine-body {
   background: linear-gradient(145deg, #2a0a0a, #1a0606);
   border: 8px solid #d4af37;

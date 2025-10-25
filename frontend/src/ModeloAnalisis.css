@@ -38,12 +38,6 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.back-btn:hover {
-  background: #1e88e5;
-  transform: translateX(-3px);
 }
 
 .header-content {
@@ -116,11 +110,6 @@
   transition: all 0.3s ease;
 }
 
-.stat-box:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
 .stat-box.destacado {
   background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
   color: white;
@@ -181,10 +170,6 @@
 .tabla-simbolos td {
   padding: 15px;
   border-bottom: 1px solid #e2e8f0;
-}
-
-.tabla-simbolos tbody tr:hover {
-  background: #f7fafc;
 }
 
 .simbolo-emoji {
@@ -337,11 +322,6 @@
   background: #1e88e5;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease;
-}
-
-.rtp-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
 }
 
 .rtp-slider::-moz-range-thumb {
@@ -352,11 +332,6 @@
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   border: none;
-  transition: transform 0.2s ease;
-}
-
-.rtp-slider::-moz-range-thumb:hover {
-  transform: scale(1.2);
 }
 
 .rtp-labels {
@@ -377,13 +352,6 @@
   font-size: 1.05em;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
-}
-
-.btn-simular:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
 }
 
 .btn-simular:disabled {
