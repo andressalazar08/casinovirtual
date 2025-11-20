@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
 
-
 const SYMBOLS = ['🍒', '🍋', '🍊', '🍉', '⭐', '💎', '7️⃣'];
 
 interface ReelProps {
@@ -12,7 +11,7 @@ interface ReelProps {
   reelIndex: number;
 }
 
-const Reel: React.FC<ReelProps> = ({ symbols, spinning, delay, reelIndex }) => {
+const Reel: React.FC<ReelProps> = ({ symbols, spinning, delay }) => {
   const [currentSymbols, setCurrentSymbols] = useState(symbols);
   const [stopAnimation, setStopAnimation] = useState(false);
 
@@ -29,9 +28,9 @@ const Reel: React.FC<ReelProps> = ({ symbols, spinning, delay, reelIndex }) => {
 
   return (
     <div className="reel-machine">
-      <div 
+      <div
         className={`reel-wheel ${spinning ? 'reel-spinning' : ''} ${stopAnimation ? 'reel-stopping' : ''}`}
-        style={{ 
+        style={{
           animationDuration: spinning ? '0.3s' : '0s',
           animationDelay: `${delay}ms`
         }}
@@ -52,6 +51,7 @@ const Reel: React.FC<ReelProps> = ({ symbols, spinning, delay, reelIndex }) => {
 
 function App() {
   const navigate = useNavigate();
+
   const [reels, setReels] = useState([
     [SYMBOLS[0], SYMBOLS[1], SYMBOLS[2], SYMBOLS[3], SYMBOLS[4]],
     [SYMBOLS[1], SYMBOLS[2], SYMBOLS[3], SYMBOLS[4], SYMBOLS[5]],
@@ -59,7 +59,7 @@ function App() {
     [SYMBOLS[3], SYMBOLS[4], SYMBOLS[5], SYMBOLS[6], SYMBOLS[0]],
     [SYMBOLS[4], SYMBOLS[5], SYMBOLS[6], SYMBOLS[0], SYMBOLS[1]]
   ]);
-  
+
   const [spinning, setSpinning] = useState(false);
   const [lines, setLines] = useState(20);
   const [bet, setBet] = useState(0.50);
@@ -68,6 +68,13 @@ function App() {
   const [credits, setCredits] = useState(2101.00);
   const [machineAnimation, setMachineAnimation] = useState(true);
   const [winEffect, setWinEffect] = useState(false);
+
+  const [showRecharge, setShowRecharge] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState(0);
+
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExp, setCardExp] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -103,7 +110,7 @@ function App() {
       setTimeout(() => {
         const middleLine = newReels.map(reel => reel[2]);
         const allSame = middleLine.every(symbol => symbol === middleLine[0]);
-        
+
         if (allSame) {
           const winAmount = totalBet * 10;
           setPaid(winAmount);
@@ -119,14 +126,81 @@ function App() {
   const increaseLines = () => lines < 20 && setLines(lines + 1);
   const decreaseLines = () => lines > 1 && setLines(lines - 1);
 
-  const handleIngresarClick = () => {
-    // Navegar a Second_Page.tsx
-    navigate('/Ingreso');
-  };
+  const handleIngresarClick = () => navigate('/Ingreso');
 
   return (
     <div className="app-container">
-      {/* Animación de máquina encendida */}
+
+      {showRecharge && (
+        <div className="recharge-modal">
+          <div className="recharge-content">
+            <h2>Recargar Créditos</h2>
+
+            <input
+              type="text"
+              className="recharge-input"
+              placeholder="Número de tarjeta"
+              maxLength={16}
+              value={cardNumber}
+              onChange={e => setCardNumber(e.target.value.replace(/\D/g, ""))}
+            />
+
+            <input
+              type="text"
+              className="recharge-input"
+              placeholder="Exp (MM/YY)"
+              maxLength={5}
+              value={cardExp}
+              onChange={e => setCardExp(e.target.value)}
+            />
+
+            <input
+              type="text"
+              className="recharge-input"
+              placeholder="CVV"
+              maxLength={3}
+              value={cardCvv}
+              onChange={e => setCardCvv(e.target.value.replace(/\D/g, ""))}
+            />
+
+            <input
+              type="number"
+              className="recharge-input"
+              placeholder="Monto"
+              value={rechargeAmount}
+              onChange={e => setRechargeAmount(Number(e.target.value))}
+            />
+
+            <button
+              className="recharge-confirm"
+              onClick={() => {
+                if (cardNumber.length !== 16) return alert("Tarjeta inválida");
+                if (!/^\d{2}\/\d{2}$/.test(cardExp)) return alert("Exp inválida");
+                if (cardCvv.length !== 3) return alert("CVV inválido");
+                if (rechargeAmount <= 0) return alert("Monto inválido");
+
+                setCredits(prev => prev + rechargeAmount);
+
+                setCardNumber("");
+                setCardExp("");
+                setCardCvv("");
+                setRechargeAmount(0);
+                setShowRecharge(false);
+              }}
+            >
+              Confirmar
+            </button>
+
+            <button
+              className="recharge-cancel"
+              onClick={() => setShowRecharge(false)}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
       {machineAnimation && (
         <div className="machine-boot-animation">
           <div className="boot-screen">
@@ -138,28 +212,29 @@ function App() {
         </div>
       )}
 
-      {/* Efecto de ganancia */}
       {winEffect && <div className="win-effect-overlay"></div>}
 
-      {/* Interfaz principal */}
       <div className={`main-interface ${machineAnimation ? 'machine-starting' : 'machine-ready'}`}>
-        
-        {/* Botón Ingresar - Ahora navega a Second_Page */}
+
         <button className="login-button" onClick={handleIngresarClick}>
           INGRESAR
         </button>
 
-        {/* Display de créditos superior */}
         <div className="credit-panel">
           <div className="credit-display">
             <span className="credit-amount">{credits.toFixed(2)}</span>
           </div>
         </div>
 
-        {/* Cuerpo principal de la máquina */}
+        <button
+          className="recharge-button"
+          onClick={() => setShowRecharge(true)}
+        >
+          RECARGAR
+        </button>
+
         <div className="slot-machine-body">
-          
-          {/* Panel de rodillos */}
+
           <div className="reels-panel">
             <div className="reels-window">
               <div className="reels-grid">
@@ -173,17 +248,14 @@ function App() {
                   />
                 ))}
               </div>
-              {/* Líneas ganadoras */}
               <div className="win-lines-overlay">
                 <div className="win-line middle-line"></div>
               </div>
             </div>
           </div>
 
-          {/* Panel de control inferior */}
           <div className="control-panel">
-            
-            {/* Información de juego */}
+
             <div className="game-info">
               <div className="info-display">
                 <div className="info-line">
@@ -195,6 +267,7 @@ function App() {
                   <span className="info-value">{bet.toFixed(2)}</span>
                 </div>
               </div>
+
               <div className="info-display">
                 <div className="info-line">
                   <span className="info-label">TOTAL BET</span>
@@ -207,27 +280,25 @@ function App() {
               </div>
             </div>
 
-            {/* Controles principales */}
             <div className="main-controls">
-              {/* Controles de líneas */}
               <div className="lines-controls">
                 <div className="lines-title">MAX LINE:</div>
                 <div className="lines-buttons">
-                  <button 
+                  <button
                     className="line-btn decrease-line"
                     onClick={decreaseLines}
                     disabled={spinning || lines <= 1}
                   >
                     -
                   </button>
-                  <button 
+                  <button
                     className="line-btn max-line"
                     onClick={setMaxLines}
                     disabled={spinning}
                   >
                     MAX
                   </button>
-                  <button 
+                  <button
                     className="line-btn increase-line"
                     onClick={increaseLines}
                     disabled={spinning || lines >= 20}
@@ -236,9 +307,8 @@ function App() {
                   </button>
                 </div>
               </div>
-              
-              {/* Botón SPIN */}
-              <button 
+
+              <button
                 className={`spin-button ${spinning ? 'spin-active' : ''}`}
                 onClick={spinReels}
                 disabled={spinning || credits < totalBet}
@@ -247,7 +317,6 @@ function App() {
               </button>
             </div>
 
-            {/* Selector de apuesta */}
             <div className="bet-controls">
               <div className="bet-title">SELECT BET</div>
               <div className="bet-options">
@@ -263,8 +332,10 @@ function App() {
                 ))}
               </div>
             </div>
+
           </div>
         </div>
+
       </div>
     </div>
   );
