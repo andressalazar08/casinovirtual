@@ -127,7 +127,7 @@ const AdminModeloA: React.FC = () => {
   return (
     <div className="admin-container">
       <header className="admin-header">
-        <button className="back-btn" onClick={() => navigate('/')}>
+        <button className="back-btn" onClick={() => navigate('/casino')}>
           ← Volver
         </button>
         <div className="header-content">

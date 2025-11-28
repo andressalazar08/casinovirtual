@@ -9,8 +9,8 @@ const Symbol = require('../models/symbol');
  * @returns {Array} Matriz de símbolos seleccionados por rodillo.
  */
 async function generateRandomReels(reels = 5, symbolsPerReel = 5, availableSymbols = null) {
-  // Símbolos fijos que coinciden con el frontend
-  const symbols = ['🍒', '🍋', '🍊', '🍉', '⭐', '💎', '7️⃣'];
+  // IDs de símbolos que coinciden con el frontend
+  const symbols = ['cherry', 'lemon', 'orange', 'watermelon', 'star', 'diamond', 'seven'];
   
   const result = [];
   for (let i = 0; i < reels; i++) {

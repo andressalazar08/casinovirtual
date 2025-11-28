@@ -252,7 +252,7 @@ const ModeloD_Rachas: React.FC = () => {
   return (
     <div className="modelo-rachas-container">
       <header className="rachas-header">
-        <button className="back-btn" onClick={() => navigate('/')}>
+        <button className="back-btn" onClick={() => navigate('/casino')}>
           ← Volver
         </button>
         <div className="header-content">

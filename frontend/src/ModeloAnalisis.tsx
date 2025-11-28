@@ -182,7 +182,7 @@ const ModeloAnalisis: React.FC = () => {
     <div className="modelo-analisis-container">
       {/* Header */}
       <header className="analisis-header">
-        <button className="back-btn" onClick={() => navigate('/')}>
+        <button className="back-btn" onClick={() => navigate('/casino')}>
           ← Volver
         </button>
         <div className="header-content">

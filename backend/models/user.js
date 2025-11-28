@@ -24,6 +24,11 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  role: {
+    type: DataTypes.ENUM('admin', 'cliente'),
+    allowNull: false,
+    defaultValue: 'cliente'
+  },
   saldo: {
     type: DataTypes.DECIMAL(10,2),
     allowNull: false,

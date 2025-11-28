@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
+import { register } from './services/authService';
 import './Second_page.css';
 
 const Second_Page: React.FC = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const { login: authLogin, isAuthenticated } = useAuth();
+  
+  // Estados para login
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Estados para registro
+  const [registerUsername, setRegisterUsername] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState('');
+  
   const [showRegister, setShowRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pageAnimation, setPageAnimation] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -17,21 +31,74 @@ const Second_Page: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/casino');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) return;
+    setError('');
+    
+    if (!email || !password) {
+      setError('Por favor complete todos los campos');
+      return;
+    }
 
     setIsLoading(true);
     
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await authLogin(email, password);
       navigate('/casino');
-    }, 2000);
+    } catch (error: any) {
+      setError(error.message || 'Error al iniciar sesión');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Register attempt');
+    setError('');
+    setSuccess('');
+    
+    if (!registerUsername || !registerEmail || !registerPassword || !registerPasswordConfirm) {
+      setError('Por favor complete todos los campos');
+      return;
+    }
+    
+    if (registerPassword !== registerPasswordConfirm) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+    
+    if (registerPassword.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      await register({
+        username: registerUsername,
+        email: registerEmail,
+        password: registerPassword,
+        role: 'cliente' // Por defecto se registran como cliente
+      });
+      
+      setSuccess('Usuario registrado exitosamente. Ahora puede iniciar sesión.');
+      setTimeout(() => {
+        setShowRegister(false);
+        setEmail(registerEmail);
+      }, 2000);
+    } catch (error: any) {
+      setError(error.message || 'Error al registrar usuario');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegisterClick = () => {
@@ -93,19 +160,47 @@ const Second_Page: React.FC = () => {
             </p>
           </div>
 
+          {error && (
+            <div style={{
+              background: '#ff5252',
+              color: 'white',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '15px',
+              textAlign: 'center',
+              fontWeight: '600'
+            }}>
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div style={{
+              background: '#4caf50',
+              color: 'white',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '15px',
+              textAlign: 'center',
+              fontWeight: '600'
+            }}>
+              {success}
+            </div>
+          )}
+
           {!showRegister ? (
             <form className="login-form" onSubmit={handleLogin}>
               <div className="form-group">
-                <label htmlFor="username" className="form-label">
-                  USUARIO
+                <label htmlFor="email" className="form-label">
+                  EMAIL
                 </label>
                 <input
-                  type="text"
-                  id="username"
+                  type="email"
+                  id="email"
                   className="form-input"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Ingresa tu usuario"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Ingresa tu email"
                   required
                 />
               </div>
@@ -128,7 +223,7 @@ const Second_Page: React.FC = () => {
               <button 
                 type="submit" 
                 className="login-submit-button"
-                disabled={!username || !password || isLoading}
+                disabled={!email || !password || isLoading}
               >
                 {isLoading ? 'VERIFICANDO...' : 'INGRESAR'}
               </button>
@@ -137,25 +232,29 @@ const Second_Page: React.FC = () => {
             <form className="login-form" onSubmit={handleRegister}>
               <div className="form-group">
                 <label htmlFor="new-username" className="form-label">
-                  NUEVO USUARIO
+                  USUARIO
                 </label>
                 <input
                   type="text"
                   id="new-username"
                   className="form-input"
+                  value={registerUsername}
+                  onChange={(e) => setRegisterUsername(e.target.value)}
                   placeholder="Crea tu usuario"
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="email" className="form-label">
-                  CORREO ELECTRÓNICO
+                <label htmlFor="register-email" className="form-label">
+                  EMAIL
                 </label>
                 <input
                   type="email"
-                  id="email"
+                  id="register-email"
                   className="form-input"
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
                   placeholder="tu@gmail.com"
                   required
                 />
@@ -169,7 +268,9 @@ const Second_Page: React.FC = () => {
                   type="password"
                   id="new-password"
                   className="form-input"
-                  placeholder="Crea tu contraseña"
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
                   required
                 />
               </div>
@@ -181,6 +282,8 @@ const Second_Page: React.FC = () => {
                 <input
                   type="password"
                   id="confirm-password"
+                  value={registerPasswordConfirm}
+                  onChange={(e) => setRegisterPasswordConfirm(e.target.value)}
                   className="form-input"
                   placeholder="Repite tu contraseña"
                   required
@@ -190,8 +293,9 @@ const Second_Page: React.FC = () => {
               <button 
                 type="submit" 
                 className="register-submit-button"
+                disabled={!registerUsername || !registerEmail || !registerPassword || !registerPasswordConfirm || isLoading}
               >
-                REGISTRARSE
+                {isLoading ? 'REGISTRANDO...' : 'REGISTRARSE'}
               </button>
             </form>
           )}
