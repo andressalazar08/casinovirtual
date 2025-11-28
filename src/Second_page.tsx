@@ -10,7 +10,6 @@ const Second_Page: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [pageAnimation, setPageAnimation] = useState(true);
 
-  // Animación de entrada
   useEffect(() => {
     const timer = setTimeout(() => {
       setPageAnimation(false);
@@ -24,18 +23,14 @@ const Second_Page: React.FC = () => {
 
     setIsLoading(true);
     
-    // Simular proceso de login
     setTimeout(() => {
       setIsLoading(false);
-      // Aquí iría la lógica real de autenticación
-      console.log('Login attempt:', { username, password });
-      // navigate('/dashboard'); // Descomenta cuando tengas el dashboard
+      navigate('/casino');
     }, 2000);
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica de registro aquí
     console.log('Register attempt');
   };
 
@@ -57,7 +52,6 @@ const Second_Page: React.FC = () => {
 
   return (
     <div className="second-page-container">
-      {/* Animación de carga */}
       {isLoading && (
         <div className="page-transition-animation">
           <div className="transition-loader">
@@ -69,7 +63,6 @@ const Second_Page: React.FC = () => {
         </div>
       )}
 
-      {/* Animación de entrada */}
       {pageAnimation && (
         <div className="page-entrance-animation">
           <div className="entrance-content">
@@ -79,10 +72,8 @@ const Second_Page: React.FC = () => {
         </div>
       )}
 
-      {/* Contenido principal */}
       <div className={`login-content ${pageAnimation ? 'content-hidden' : 'content-visible'}`}>
         
-        {/* Volver a la página anterior */}
         <button 
           className="back-button"
           onClick={() => navigate(-1)}
@@ -92,7 +83,6 @@ const Second_Page: React.FC = () => {
 
         <div className="login-card">
           
-          {/* Encabezado */}
           <div className="login-header">
             <div className="login-icon">🎰</div>
             <h1 className="login-title">
@@ -104,7 +94,6 @@ const Second_Page: React.FC = () => {
           </div>
 
           {!showRegister ? (
-            /* Formulario de Login */
             <form className="login-form" onSubmit={handleLogin}>
               <div className="form-group">
                 <label htmlFor="username" className="form-label">
@@ -145,7 +134,6 @@ const Second_Page: React.FC = () => {
               </button>
             </form>
           ) : (
-            /* Formulario de Registro - TEXTO CORREGIDO */
             <form className="login-form" onSubmit={handleRegister}>
               <div className="form-group">
                 <label htmlFor="new-username" className="form-label">
@@ -208,7 +196,6 @@ const Second_Page: React.FC = () => {
             </form>
           )}
 
-          {/* Enlace de registro/volver - TEXTO CORREGIDO */}
           <div className="register-section">
             {!showRegister ? (
               <>
@@ -235,7 +222,6 @@ const Second_Page: React.FC = () => {
             )}
           </div>
 
-          {/* Información adicional - TEXTO CORREGIDO */}
           <div className="login-footer">
             <p className="footer-text">
               Al {!showRegister ? 'ingresar' : 'registrarte'} aceptas nuestros{' '}

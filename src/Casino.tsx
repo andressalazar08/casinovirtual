@@ -27,13 +27,28 @@ const SYMBOLS = [
 ];
 
 // ==================================================
-// PUNTO 1: INTERFACE PARA LA RESPUESTA DEL BACKEND
+// INTERFACE PARA LA RESPUESTA DEL BACKEND
 // ==================================================
 interface SpinResult {
-  reels: string[][]; // Array de símbolos IDs para cada reel
+  reels: string[][];
   winAmount: number;
   winType?: string;
   newBalance: number;
+}
+
+// ==================================================
+// INTERFACE PARA DATOS DEL USUARIO DESDE BD
+// ==================================================
+interface UserData {
+  id: string;
+  username: string;
+  credits: number;
+  // AQUÍ SE PUEDEN AÑADIR MÁS CAMPOS DE LA BD COMO:
+  // email: string;
+  // level: number;
+  // experience: number;
+  // avatar: string;
+  // etc...
 }
 
 interface ReelProps {
@@ -98,7 +113,7 @@ const Reel: React.FC<ReelProps> = ({ symbols, spinning, reelIndex, startDelay })
   );
 };
 
-function App() {
+function Casino() {
   const navigate = useNavigate();
   
   const spinAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -108,7 +123,13 @@ function App() {
   const reelStopAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // ==================================================
-  // PUNTO 2: ESTADO INICIAL - PODRÍA VENIR DEL BACKEND
+  // ESTADOS PARA USUARIO Y MENÚ DESPLEGABLE
+  // ==================================================
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  
+  // ==================================================
+  // ESTADO INICIAL - LOS CRÉDITOS INICIAN EN 0 Y SE CARGARÁN DESDE BD
   // ==================================================
   const [reels, setReels] = useState([
     [SYMBOLS[0], SYMBOLS[1], SYMBOLS[2], SYMBOLS[3], SYMBOLS[4]],
@@ -123,12 +144,27 @@ function App() {
   const [bet, setBet] = useState(0.50);
   const [totalBet, setTotalBet] = useState(10.00);
   const [paid, setPaid] = useState(0.00);
-  const [credits, setCredits] = useState(1000.00);
+  // LOS CRÉDITOS SE OBTENDRÁN DEL userData.credits
   const [machineAnimation, setMachineAnimation] = useState(true);
   const [winEffect, setWinEffect] = useState(false);
   const [jackpotEffect, setJackpotEffect] = useState(false);
 
+  // ==================================================
+  // EFFECT PARA CARGAR DATOS DEL USUARIO DESDE BD
+  // ==================================================
   useEffect(() => {
+    // AQUÍ SE DEBE HACER LA LLAMADA A LA API PARA OBTENER LOS DATOS DEL USUARIO
+    // EJEMPLO:
+    
+    // DATOS DE EJEMPLO - REEMPLAZAR CON LLAMADA REAL A BD
+    const mockUserData: UserData = {
+      id: '1',
+      username: 'Jugador123', // ESTE NOMBRE VENDRÁ DE LA BD
+      credits: 1500.00 // ESTE VALOR VENDRÁ DE LA BD
+    };
+    setUserData(mockUserData);
+    
+    // Cargar sonidos
     spinAudioRef.current = new Audio(spinSound);
     winAudioRef.current = new Audio(winSound);
     jackpotAudioRef.current = new Audio(jackpotSound);
@@ -184,7 +220,7 @@ function App() {
   };
 
   // ==================================================
-  // PUNTO 3: FUNCIÓN PARA LLAMAR AL BACKEND
+  // FUNCIÓN PARA LLAMAR AL BACKEND - ACTUALIZADA PARA BD
   // ==================================================
   const spinWithBackend = async (): Promise<SpinResult> => {
     try {
@@ -196,7 +232,8 @@ function App() {
         body: JSON.stringify({
           bet: totalBet,
           lines: lines,
-          credits: credits
+          userId: userData?.id, // ENVIAR ID DEL USUARIO PARA ACTUALIZAR BD
+          currentCredits: userData?.credits || 0
         })
       });
 
@@ -205,16 +242,24 @@ function App() {
       }
 
       const result: SpinResult = await response.json();
+      
+      // ACTUALIZAR LOS CRÉDITOS DEL USUARIO LOCALMENTE CON LA RESPUESTA
+      if (userData) {
+        setUserData({
+          ...userData,
+          credits: result.newBalance
+        });
+      }
+      
       return result;
     } catch (error) {
       console.error('Error al conectar con el backend:', error);
-      // Fallback local si el backend falla
       return generateLocalResult();
     }
   };
 
   // ==================================================
-  // PUNTO 4: GENERACIÓN LOCAL (FALLBACK)
+  // GENERACIÓN LOCAL (FALLBACK) - ACTUALIZADA PARA BD
   // ==================================================
   const generateLocalResult = (): SpinResult => {
     const newReels = reels.map(() => {
@@ -225,26 +270,33 @@ function App() {
       return newReel;
     });
 
-    // Lógica local temporal para calcular ganancias
     const middleLine = newReels.map(reel => reel[2]);
     const allSame = middleLine.every(symbol => symbol === middleLine[0]);
     const winAmount = allSame ? totalBet * 10 : 0;
+    
+    const currentCredits = userData?.credits || 0;
+    const newBalance = currentCredits - totalBet + winAmount;
+
+    // ACTUALIZAR CRÉDITOS LOCALMENTE EN MODO FALLBACK
+    if (userData) {
+      setUserData({
+        ...userData,
+        credits: newBalance
+      });
+    }
 
     return {
       reels: newReels,
       winAmount: winAmount,
-      newBalance: credits - totalBet + winAmount
+      newBalance: newBalance
     };
   };
 
-  // ==================================================
-  // PUNTO 5: CONVERTIR RESULTADO DEL BACKEND A SÍMBOLOS
-  // ==================================================
   const mapSymbolIdsToObjects = (symbolIds: string[][]) => {
     return symbolIds.map(reelSymbols => 
       reelSymbols.map(symbolId => {
         const symbol = SYMBOLS.find(s => s.id === symbolId);
-        return symbol || SYMBOLS[0]; // Fallback si no encuentra el símbolo
+        return symbol || SYMBOLS[0];
       })
     );
   };
@@ -269,10 +321,11 @@ function App() {
   };
 
   // ==================================================
-  // PUNTO 6: FUNCIÓN SPIN PRINCIPAL ACTUALIZADA
+  // FUNCIÓN SPIN PRINCIPAL - VERIFICAR CRÉDITOS DESDE BD
   // ==================================================
   const spinReels = async () => {
-    if (spinning || credits < totalBet) return;
+    const currentCredits = userData?.credits || 0;
+    if (spinning || currentCredits < totalBet) return;
 
     playSound(clickAudioRef, 'click');
     setSpinning(true);
@@ -283,17 +336,10 @@ function App() {
     playSound(spinAudioRef, 'spin');
 
     try {
-      // ==================================================
-      // PUNTO 7: LLAMADA AL BACKEND AQUÍ
-      // ==================================================
       const result = await spinWithBackend();
       
-      // Actualizar reels con el resultado del backend
       const newReels = mapSymbolIdsToObjects(result.reels);
       setReels(newReels);
-
-      // Actualizar créditos y mostrar ganancias
-      setCredits(result.newBalance);
       
       setTimeout(() => {
         playSound(reelStopAudioRef, 'reelStop');
@@ -303,11 +349,9 @@ function App() {
 
     } catch (error) {
       console.error('Error en spin:', error);
-      // Fallback local si hay error
       const localResult = generateLocalResult();
       const newReels = mapSymbolIdsToObjects(localResult.reels);
       setReels(newReels);
-      setCredits(localResult.newBalance);
       
       setTimeout(() => {
         playSound(reelStopAudioRef, 'reelStop');
@@ -315,6 +359,33 @@ function App() {
         checkWin(localResult.winAmount);
       }, 2500);
     }
+  };
+
+  // ==================================================
+  // FUNCIONES PARA EL MENÚ DE USUARIO
+  // ==================================================
+  const handleConfiguracion = () => {
+    // AQUÍ SE DEBE NAVEGAR A LA PÁGINA DE CONFIGURACIÓN
+    // navigate('/configuracion');
+    console.log('Abrir configuración');
+    setShowUserMenu(false);
+  };
+
+  const handleCerrarSesion = () => {
+    // AQUÍ SE DEBE HACER LOGOUT Y LIMPIAR DATOS DE USUARIO
+    // fetch('/api/logout', { method: 'POST' })
+    //   .then(() => {
+    //     setUserData(null);
+    //     navigate('/login');
+    //   });
+    console.log('Cerrar sesión');
+    setUserData(null);
+    setShowUserMenu(false);
+    navigate('/login');
+  };
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu);
   };
 
   const setMaxLines = () => {
@@ -339,10 +410,6 @@ function App() {
   const handleBetChange = (amount: number) => {
     playSound(clickAudioRef, 'click');
     setBet(amount);
-  };
-
-  const handleIngresarClick = () => {
-    navigate('/Ingreso');
   };
 
   const getStartDelay = (reelIndex: number) => {
@@ -375,13 +442,30 @@ function App() {
         
         <div className="credit-panel-top-left">
           <div className="credit-display">
-            <span className="credit-amount">{credits.toFixed(2)}</span>
+            {/* MOSTRAR CRÉDITOS DESDE BD */}
+            <span className="credit-amount">{(userData?.credits || 0).toFixed(2)}</span>
           </div>
         </div>
 
-        <button className="login-button" onClick={handleIngresarClick}>
-          INGRESAR
-        </button>
+        {/* BOTÓN DE USUARIO CON MENÚ DESPLEGABLE */}
+        <div className="user-menu-container">
+          <button className="user-menu-button" onClick={toggleUserMenu}>
+            {/* MOSTRAR NOMBRE DE USUARIO DESDE BD */}
+            <span className="username">{userData?.username || 'USUARIO'}</span>
+            <span className="dropdown-arrow">▼</span>
+          </button>
+          
+          {showUserMenu && (
+            <div className="user-dropdown-menu">
+              <button className="dropdown-item" onClick={handleConfiguracion}>
+                ⚙️ Configuración
+              </button>
+              <button className="dropdown-item" onClick={handleCerrarSesion}>
+                🚪 Cerrar Sesión
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="slot-machine-body">
           
@@ -457,7 +541,8 @@ function App() {
               <button 
                 className={`spin-button ${spinning ? 'spin-active' : ''}`}
                 onClick={spinReels}
-                disabled={spinning || credits < totalBet}
+                // VERIFICAR CRÉDITOS DESDE BD
+                disabled={spinning || (userData?.credits || 0) < totalBet}
               >
                 <span className="spin-text">{spinning ? 'SPINNING...' : 'SPIN'}</span>
               </button>
@@ -485,4 +570,4 @@ function App() {
   );
 }
 
-export default App;
+export default Casino;
