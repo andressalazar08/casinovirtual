@@ -77,8 +77,9 @@ const Reel: React.FC<ReelProps> = ({ symbols, spinning, reelIndex, startDelay })
   }, [spinning, startDelay]);
 
   useEffect(() => {
+    console.log(`🎰 [Reel ${reelIndex}] Actualizando símbolos:`, symbols.map(s => s.id));
     setCurrentSymbols(symbols);
-  }, [symbols]);
+  }, [symbols, reelIndex]);
 
   return (
     <div className="reel-machine">
@@ -240,6 +241,8 @@ function Casino() {
       }
 
       const data = await response.json();
+      console.log('📡 [spinWithBackend] Respuesta del backend:', data);
+      console.log('📡 [spinWithBackend] Reels del backend:', data.reels);
       
       // El backend devuelve: { reels, win, payout, saldo }
       // Convertir al formato que espera el frontend
@@ -250,8 +253,9 @@ function Casino() {
         winType: data.win ? 'line' : undefined
       };
       
-      // ACTUALIZAR LOS CRÉDITOS DEL USUARIO REFRESCANDO LA SESIÓN
-      await refreshUser();
+      console.log('📡 [spinWithBackend] Objeto result creado:', result);
+      
+      // NO actualizar el saldo aquí, se actualizará después de la animación
       
       return result;
     } catch (error) {
@@ -287,12 +291,18 @@ function Casino() {
   };
 
   const mapSymbolIdsToObjects = (symbolIds: string[][]) => {
-    return symbolIds.map(reelSymbols => 
+    console.log('🔍 [mapSymbolIdsToObjects] IDs recibidos del backend:', symbolIds);
+    const mapped = symbolIds.map(reelSymbols => 
       reelSymbols.map(symbolId => {
         const symbol = SYMBOLS.find(s => s.id === symbolId);
+        if (!symbol) {
+          console.warn('⚠️ Símbolo no encontrado:', symbolId);
+        }
         return symbol || SYMBOLS[0];
       })
     );
+    console.log('✅ [mapSymbolIdsToObjects] Símbolos mapeados:', mapped.map(reel => reel.map(s => s.id)));
+    return mapped;
   };
 
   const checkWin = (winAmount: number) => {
@@ -331,25 +341,37 @@ function Casino() {
 
     try {
       const result = await spinWithBackend();
+      console.log('🎰 [spinReels] Resultado del backend:', result);
       
       const newReels = mapSymbolIdsToObjects(result.reels);
+      console.log('🎰 [spinReels] Llamando setReels con:', newReels.map(reel => reel.map(s => s.id)));
       setReels(newReels);
+      console.log('🎰 [spinReels] setReels ejecutado');
       
-      setTimeout(() => {
+      setTimeout(async () => {
         playSound(reelStopAudioRef, 'reelStop');
         setSpinning(false);
+        
+        // Actualizar el saldo DESPUÉS de que terminen de girar las ruletas
+        await refreshUser();
+        
         checkWin(result.winAmount);
       }, 2500);
 
     } catch (error) {
-      console.error('Error en spin:', error);
+      console.error('❌ ERROR en spin:', error);
+      console.warn('⚠️ USANDO GENERACIÓN LOCAL (FALLBACK) - El backend no respondió correctamente');
       const localResult = generateLocalResult();
       const newReels = mapSymbolIdsToObjects(localResult.reels);
       setReels(newReels);
       
-      setTimeout(() => {
+      setTimeout(async () => {
         playSound(reelStopAudioRef, 'reelStop');
         setSpinning(false);
+        
+        // Intentar actualizar el saldo incluso en modo fallback
+        await refreshUser();
+        
         checkWin(localResult.winAmount);
       }, 2500);
     }

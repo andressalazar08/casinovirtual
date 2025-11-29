@@ -1,6 +1,7 @@
 const SlotSpin = require('../models/slotspin');
 const User = require('../models/user');
 const Symbol = require('../models/symbol');
+const ModelConfig = require('../models/modelconfig');
 const { generateRandomReels, checkWinningLine } = require('./slotLogic');
 
 /**
@@ -20,7 +21,7 @@ exports.spin = async (req, res) => {
       // Generar rodillos aleatorios (5x5 como en el frontend)
       const reels = await generateRandomReels(5, 5);
       // Verificar línea ganadora
-      const result = checkWinningLine(reels, betAmount);
+      const result = await checkWinningLine(reels, betAmount);
 
       return res.json({
         reels,
@@ -39,7 +40,9 @@ exports.spin = async (req, res) => {
     // Generar rodillos aleatorios (5x5 como en el frontend)
     const reels = await generateRandomReels(5, 5);
     // Verificar línea ganadora
-    const result = checkWinningLine(reels, betAmount);
+    const result = await checkWinningLine(reels, betAmount);
+
+    console.log('Resultado del spin:', result); // Debug
 
     // Actualizar saldo
     user.saldo = Number(user.saldo) - betAmount + result.payout;

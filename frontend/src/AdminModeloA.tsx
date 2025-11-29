@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getModelAConfig, saveModelAConfig } from './services/modelConfigService';
 import './AdminModeloA.css';
 
 // Símbolos base del Modelo A
@@ -26,6 +27,37 @@ const AdminModeloA: React.FC = () => {
   const [simbolos, setSimbolos] = useState<Simbolo[]>(SIMBOLOS_INICIALES);
   const [mensaje, setMensaje] = useState('');
   const [rtpObjetivo, setRtpObjetivo] = useState(95);
+  const [cargando, setCargando] = useState(false);
+
+  // Cargar configuración desde el backend
+  useEffect(() => {
+    const cargarConfiguracion = async () => {
+      try {
+        setCargando(true);
+        const config = await getModelAConfig();
+        
+        // Mapear símbolos del backend al formato del frontend
+        const simbolosMapeados = config.symbols.map(s => ({
+          emoji: s.emoji,
+          nombre: s.symbolName || '',
+          multiplicador: s.multiplier || 10,
+          probabilidad: s.probability || 0,
+          tipo: s.type || 'Común'
+        }));
+        
+        setSimbolos(simbolosMapeados);
+        setRtpObjetivo(config.rtpTarget || 95);
+      } catch (error) {
+        console.error('Error cargando configuración:', error);
+        setMensaje('Error al cargar la configuración. Usando valores por defecto.');
+        setTimeout(() => setMensaje(''), 3000);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarConfiguracion();
+  }, []);
 
   // Habilitar scroll
   useEffect(() => {
@@ -110,18 +142,57 @@ const AdminModeloA: React.FC = () => {
     setTimeout(() => setMensaje(''), 3000);
   };
 
-  // Guardar configuración (simulado - a futuro se conectaría con backend)
-  const guardarConfiguracion = () => {
-    // TODO: Aquí se enviaría la configuración al backend
-    console.log('Configuración guardada:', {
-      simbolos,
-      rtpObjetivo,
-      rtpBase,
-      factorAjuste
-    });
-    
-    setMensaje('Configuración guardada correctamente (simulado)');
-    setTimeout(() => setMensaje(''), 3000);
+  // Guardar configuración en el backend
+  const guardarConfiguracion = async () => {
+    try {
+      // Validar que las probabilidades sumen 1.0
+      if (Math.abs(sumaProbabilidades - 1.0) >= 0.001) {
+        setMensaje('Error: Las probabilidades deben sumar 1.0. Usa el botón "Normalizar" primero.');
+        setTimeout(() => setMensaje(''), 4000);
+        return;
+      }
+
+      setCargando(true);
+
+      // Mapear símbolos al formato del backend
+      const symbolsConfig = simbolos.map(s => {
+        // Determinar el symbolId basado en el emoji
+        let symbolId = '';
+        switch(s.emoji) {
+          case '🍒': symbolId = 'cherry'; break;
+          case '🍋': symbolId = 'lemon'; break;
+          case '🍊': symbolId = 'orange'; break;
+          case '🍉': symbolId = 'watermelon'; break;
+          case '⭐': symbolId = 'star'; break;
+          case '💎': symbolId = 'diamond'; break;
+          case '7️⃣': symbolId = 'seven'; break;
+          default: symbolId = 'cherry';
+        }
+
+        return {
+          symbolId,
+          symbolName: s.nombre,
+          emoji: s.emoji,
+          probability: s.probabilidad,
+          multiplier: s.multiplicador,
+          type: s.tipo
+        };
+      });
+
+      await saveModelAConfig({
+        symbols: symbolsConfig,
+        rtpTarget: rtpObjetivo
+      });
+      
+      setMensaje('✅ Configuración guardada correctamente. Los cambios ya afectan el juego.');
+      setTimeout(() => setMensaje(''), 4000);
+    } catch (error: any) {
+      console.error('Error guardando configuración:', error);
+      setMensaje(`❌ Error: ${error.message}`);
+      setTimeout(() => setMensaje(''), 4000);
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -295,9 +366,9 @@ const AdminModeloA: React.FC = () => {
           <button 
             className="btn-accion btn-guardar"
             onClick={guardarConfiguracion}
-            disabled={Math.abs(sumaProbabilidades - 1.0) >= 0.001}
+            disabled={Math.abs(sumaProbabilidades - 1.0) >= 0.001 || cargando}
           >
-            Guardar Configuración
+            {cargando ? 'Guardando...' : 'Guardar Configuración'}
           </button>
         </div>
 

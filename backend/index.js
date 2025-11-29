@@ -6,6 +6,7 @@ const sequelize = require("./sequelize");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const slotRoutes = require("./routes/slot");
+const modelConfigRoutes = require("./routes/modelConfig");
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use(session({
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/slots", slotRoutes);
+app.use("/api/model-config", modelConfigRoutes);
 
 const port = 3000;
 
