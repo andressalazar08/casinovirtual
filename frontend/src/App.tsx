@@ -3,26 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import './App.css';
 
-<<<<<<< HEAD
-function App() {
-  const navigate = useNavigate();
-  const { isAuthenticated, loading } = useAuth();
-
-  // Mostrar loading mientras verifica la sesión
-  if (loading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-        color: 'white',
-        fontSize: '24px',
-        fontWeight: 'bold'
-      }}>
-        🎰 Cargando...
-=======
 const SYMBOLS = ['🍒', '🍋', '🍊', '🍉', '⭐', '💎', '7️⃣'];
 
 interface ReelProps {
@@ -357,7 +337,6 @@ function App() {
           </div>
         </div>
 
->>>>>>> c3f0798513124a765e82dcc2d323b2509eb6bf1b
       </div>
     );
   }

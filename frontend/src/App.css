@@ -881,7 +881,6 @@ html, body, #root {
     font-size: 18px;
     min-width: 150px;
   }
-<<<<<<< HEAD
   
   .reels-window {
     height: 230px;
@@ -1112,45 +1111,12 @@ html, body, #root {
 /* ================================================== */
 /* MODAL DE RECARGA DE SALDO */
 /* ================================================== */
-=======
-}
-
-/* Botón RECARGAR */
-.recharge-button {
-  background: linear-gradient(145deg, #228b22, #145214);
-  border: 3px solid #32cd32;
-  border-radius: 8px;
-  color: #fff;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  transition: all 0.3s ease;
-}
-
-.recharge-button:hover {
-  background: linear-gradient(145deg, #32cd32, #228b22);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0,255,0,0.4);
-}
-
-.recharge-button:active {
-  transform: scale(0.95);
-}
-
-/* Modal de recarga */
->>>>>>> c3f0798513124a765e82dcc2d323b2509eb6bf1b
 .recharge-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-<<<<<<< HEAD
   background: rgba(0,0,0,0.8);
   display: flex;
   justify-content: center;
@@ -1255,7 +1221,41 @@ html, body, #root {
 .recharge-confirm:active, .recharge-cancel:active {
   transform: translateY(0);
 }
-=======
+
+/* Botón RECARGAR */
+.recharge-button {
+  background: linear-gradient(145deg, #228b22, #145214);
+  border: 3px solid #32cd32;
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  transition: all 0.3s ease;
+}
+
+.recharge-button:hover {
+  background: linear-gradient(145deg, #32cd32, #228b22);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,255,0,0.4);
+}
+
+.recharge-button:active {
+  transform: scale(0.95);
+}
+
+/* Modal de recarga */
+.recharge-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(0,0,0,0.65);
   display: flex;
   justify-content: center;
@@ -1330,4 +1330,3 @@ html, body, #root {
 .recharge-cancel:hover {
   background: linear-gradient(145deg, #666, #444);
 }
->>>>>>> c3f0798513124a765e82dcc2d323b2509eb6bf1b
