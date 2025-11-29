@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
+import { rechargeBalance } from './services/authService';
 import './App.css';
 
 import spinSound from '/Spin-Sound.wav';
@@ -75,8 +77,9 @@ const Reel: React.FC<ReelProps> = ({ symbols, spinning, reelIndex, startDelay })
   }, [spinning, startDelay]);
 
   useEffect(() => {
+    console.log(`🎰 [Reel ${reelIndex}] Actualizando símbolos:`, symbols.map(s => s.id));
     setCurrentSymbols(symbols);
-  }, [symbols]);
+  }, [symbols, reelIndex]);
 
   return (
     <div className="reel-machine">
@@ -115,6 +118,7 @@ const Reel: React.FC<ReelProps> = ({ symbols, spinning, reelIndex, startDelay })
 
 function Casino() {
   const navigate = useNavigate();
+  const { isAdmin, user, logout, refreshUser } = useAuth();
   
   const spinAudioRef = useRef<HTMLAudioElement | null>(null);
   const winAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -123,9 +127,8 @@ function Casino() {
   const reelStopAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // ==================================================
-  // ESTADOS PARA USUARIO Y MENÚ DESPLEGABLE
+  // ESTADOS PARA MENÚ DESPLEGABLE
   // ==================================================
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   
   // ==================================================
@@ -148,22 +151,20 @@ function Casino() {
   const [machineAnimation, setMachineAnimation] = useState(true);
   const [winEffect, setWinEffect] = useState(false);
   const [jackpotEffect, setJackpotEffect] = useState(false);
+  
+  // ==================================================
+  // ESTADOS PARA RECARGA DE SALDO
+  // ==================================================
+  const [showRecharge, setShowRecharge] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState(0);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExp, setCardExp] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
 
   // ==================================================
-  // EFFECT PARA CARGAR DATOS DEL USUARIO DESDE BD
+  // EFFECT PARA CARGAR SONIDOS
   // ==================================================
   useEffect(() => {
-    // AQUÍ SE DEBE HACER LA LLAMADA A LA API PARA OBTENER LOS DATOS DEL USUARIO
-    // EJEMPLO:
-    
-    // DATOS DE EJEMPLO - REEMPLAZAR CON LLAMADA REAL A BD
-    const mockUserData: UserData = {
-      id: '1',
-      username: 'Jugador123', // ESTE NOMBRE VENDRÁ DE LA BD
-      credits: 1500.00 // ESTE VALOR VENDRÁ DE LA BD
-    };
-    setUserData(mockUserData);
-    
     // Cargar sonidos
     spinAudioRef.current = new Audio(spinSound);
     winAudioRef.current = new Audio(winSound);
@@ -224,16 +225,14 @@ function Casino() {
   // ==================================================
   const spinWithBackend = async (): Promise<SpinResult> => {
     try {
-      const response = await fetch('/api/spin', {
+      const response = await fetch('http://localhost:3000/api/slots/spin', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          bet: totalBet,
-          lines: lines,
-          userId: userData?.id, // ENVIAR ID DEL USUARIO PARA ACTUALIZAR BD
-          currentCredits: userData?.credits || 0
+          betAmount: totalBet
         })
       });
 
@@ -241,15 +240,22 @@ function Casino() {
         throw new Error('Error en la respuesta del servidor');
       }
 
-      const result: SpinResult = await response.json();
+      const data = await response.json();
+      console.log('📡 [spinWithBackend] Respuesta del backend:', data);
+      console.log('📡 [spinWithBackend] Reels del backend:', data.reels);
       
-      // ACTUALIZAR LOS CRÉDITOS DEL USUARIO LOCALMENTE CON LA RESPUESTA
-      if (userData) {
-        setUserData({
-          ...userData,
-          credits: result.newBalance
-        });
-      }
+      // El backend devuelve: { reels, win, payout, saldo }
+      // Convertir al formato que espera el frontend
+      const result: SpinResult = {
+        reels: data.reels,
+        winAmount: data.payout,
+        newBalance: data.saldo,
+        winType: data.win ? 'line' : undefined
+      };
+      
+      console.log('📡 [spinWithBackend] Objeto result creado:', result);
+      
+      // NO actualizar el saldo aquí, se actualizará después de la animación
       
       return result;
     } catch (error) {
@@ -274,16 +280,8 @@ function Casino() {
     const allSame = middleLine.every(symbol => symbol === middleLine[0]);
     const winAmount = allSame ? totalBet * 10 : 0;
     
-    const currentCredits = userData?.credits || 0;
+    const currentCredits = user?.saldo || 0;
     const newBalance = currentCredits - totalBet + winAmount;
-
-    // ACTUALIZAR CRÉDITOS LOCALMENTE EN MODO FALLBACK
-    if (userData) {
-      setUserData({
-        ...userData,
-        credits: newBalance
-      });
-    }
 
     return {
       reels: newReels,
@@ -293,12 +291,18 @@ function Casino() {
   };
 
   const mapSymbolIdsToObjects = (symbolIds: string[][]) => {
-    return symbolIds.map(reelSymbols => 
+    console.log('🔍 [mapSymbolIdsToObjects] IDs recibidos del backend:', symbolIds);
+    const mapped = symbolIds.map(reelSymbols => 
       reelSymbols.map(symbolId => {
         const symbol = SYMBOLS.find(s => s.id === symbolId);
+        if (!symbol) {
+          console.warn('⚠️ Símbolo no encontrado:', symbolId);
+        }
         return symbol || SYMBOLS[0];
       })
     );
+    console.log('✅ [mapSymbolIdsToObjects] Símbolos mapeados:', mapped.map(reel => reel.map(s => s.id)));
+    return mapped;
   };
 
   const checkWin = (winAmount: number) => {
@@ -324,7 +328,7 @@ function Casino() {
   // FUNCIÓN SPIN PRINCIPAL - VERIFICAR CRÉDITOS DESDE BD
   // ==================================================
   const spinReels = async () => {
-    const currentCredits = userData?.credits || 0;
+    const currentCredits = user?.saldo || 0;
     if (spinning || currentCredits < totalBet) return;
 
     playSound(clickAudioRef, 'click');
@@ -337,25 +341,37 @@ function Casino() {
 
     try {
       const result = await spinWithBackend();
+      console.log('🎰 [spinReels] Resultado del backend:', result);
       
       const newReels = mapSymbolIdsToObjects(result.reels);
+      console.log('🎰 [spinReels] Llamando setReels con:', newReels.map(reel => reel.map(s => s.id)));
       setReels(newReels);
+      console.log('🎰 [spinReels] setReels ejecutado');
       
-      setTimeout(() => {
+      setTimeout(async () => {
         playSound(reelStopAudioRef, 'reelStop');
         setSpinning(false);
+        
+        // Actualizar el saldo DESPUÉS de que terminen de girar las ruletas
+        await refreshUser();
+        
         checkWin(result.winAmount);
       }, 2500);
 
     } catch (error) {
-      console.error('Error en spin:', error);
+      console.error('❌ ERROR en spin:', error);
+      console.warn('⚠️ USANDO GENERACIÓN LOCAL (FALLBACK) - El backend no respondió correctamente');
       const localResult = generateLocalResult();
       const newReels = mapSymbolIdsToObjects(localResult.reels);
       setReels(newReels);
       
-      setTimeout(() => {
+      setTimeout(async () => {
         playSound(reelStopAudioRef, 'reelStop');
         setSpinning(false);
+        
+        // Intentar actualizar el saldo incluso en modo fallback
+        await refreshUser();
+        
         checkWin(localResult.winAmount);
       }, 2500);
     }
@@ -371,21 +387,30 @@ function Casino() {
     setShowUserMenu(false);
   };
 
-  const handleCerrarSesion = () => {
-    // AQUÍ SE DEBE HACER LOGOUT Y LIMPIAR DATOS DE USUARIO
-    // fetch('/api/logout', { method: 'POST' })
-    //   .then(() => {
-    //     setUserData(null);
-    //     navigate('/login');
-    //   });
-    console.log('Cerrar sesión');
-    setUserData(null);
-    setShowUserMenu(false);
-    navigate('/login');
+  const handleCerrarSesion = async () => {
+    try {
+      await logout();
+      setShowUserMenu(false);
+      navigate('/Ingreso');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   const toggleUserMenu = () => {
     setShowUserMenu(!showUserMenu);
+  };
+
+  const handleModeloAnalisisClick = () => {
+    navigate('/modelo-analisis');
+  };
+
+  const handleModeloDClick = () => {
+    navigate('/modelo-d-rachas');
+  };
+
+  const handleAdminModeloAClick = () => {
+    navigate('/admin-modelo-a');
   };
 
   const setMaxLines = () => {
@@ -418,6 +443,81 @@ function Casino() {
 
   return (
     <div className="app-container">
+      {/* MODAL DE RECARGA DE SALDO */}
+      {showRecharge && (
+        <div className="recharge-modal">
+          <div className="recharge-content">
+            <h2>Recargar Saldo</h2>
+
+            <input 
+              type="text" 
+              className="recharge-input" 
+              placeholder="Número de tarjeta" 
+              maxLength={16} 
+              value={cardNumber} 
+              onChange={e => setCardNumber(e.target.value.replace(/\D/g,''))} 
+            />
+            <input 
+              type="text" 
+              className="recharge-input" 
+              placeholder="Exp (MM/YY)" 
+              maxLength={5} 
+              value={cardExp} 
+              onChange={e => setCardExp(e.target.value)} 
+            />
+            <input 
+              type="text" 
+              className="recharge-input" 
+              placeholder="CVV" 
+              maxLength={3} 
+              value={cardCvv} 
+              onChange={e => setCardCvv(e.target.value.replace(/\D/g,''))} 
+            />
+            <input 
+              type="number" 
+              className="recharge-input" 
+              placeholder="Monto" 
+              value={rechargeAmount || ''} 
+              onChange={e => setRechargeAmount(Number(e.target.value))} 
+            />
+
+            <button className="recharge-confirm" onClick={async () => {
+              if(cardNumber.length!==16){alert("Número de tarjeta inválido");return;}
+              if(!/^\d{2}\/\d{2}$/.test(cardExp)){alert("Fecha de expiración inválida (MM/YY)");return;}
+              if(cardCvv.length!==3){alert("CVV inválido");return;}
+              if(rechargeAmount<=0){alert("Monto inválido");return;}
+              
+              try {
+                // Llamar al endpoint del backend para recargar saldo
+                const response = await rechargeBalance({
+                  amount: rechargeAmount,
+                  cardNumber: cardNumber,
+                  cardExp: cardExp,
+                  cardCvv: cardCvv
+                });
+                
+                // Actualizar el usuario en el contexto
+                await refreshUser();
+                
+                alert(`¡Recarga exitosa! Se han agregado $${response.rechargedAmount} a tu saldo.\nSaldo anterior: $${response.previousBalance}\nSaldo actual: $${response.newBalance}`);
+                
+                // Limpiar formulario
+                setCardNumber(""); 
+                setCardExp(""); 
+                setCardCvv(""); 
+                setRechargeAmount(0); 
+                setShowRecharge(false);
+              } catch (error) {
+                console.error('Error al recargar saldo:', error);
+                alert(error instanceof Error ? error.message : 'Error al procesar la recarga. Por favor intenta nuevamente.');
+              }
+            }}>Confirmar</button>
+
+            <button className="recharge-cancel" onClick={()=>setShowRecharge(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
       {machineAnimation && (
         <div className="machine-boot-animation">
           <div className="boot-screen">
@@ -443,29 +543,41 @@ function Casino() {
         <div className="credit-panel-top-left">
           <div className="credit-display">
             {/* MOSTRAR CRÉDITOS DESDE BD */}
-            <span className="credit-amount">{(userData?.credits || 0).toFixed(2)}</span>
+            <span className="credit-amount">{Number(user?.saldo || 0).toFixed(2)}</span>
           </div>
+          <button className="recharge-button" onClick={()=>setShowRecharge(true)}>💳 RECARGAR</button>
         </div>
 
-        {/* BOTÓN DE USUARIO CON MENÚ DESPLEGABLE */}
-        <div className="user-menu-container">
-          <button className="user-menu-button" onClick={toggleUserMenu}>
-            {/* MOSTRAR NOMBRE DE USUARIO DESDE BD */}
-            <span className="username">{userData?.username || 'USUARIO'}</span>
-            <span className="dropdown-arrow">▼</span>
-          </button>
-          
-          {showUserMenu && (
-            <div className="user-dropdown-menu">
-              <button className="dropdown-item" onClick={handleConfiguracion}>
-                ⚙️ Configuración
-              </button>
-              <button className="dropdown-item" onClick={handleCerrarSesion}>
-                🚪 Cerrar Sesión
-              </button>
+        {/* PANEL DE USUARIO CON LOGOUT VISIBLE */}
+        <div className="user-panel-casino">
+          <div className="user-info-casino">
+            <span className="user-icon">👤</span>
+            <div className="user-details">
+              <span className="user-name-casino">{user?.username || 'USUARIO'}</span>
+              <span className="user-role-casino">({user?.role || 'cliente'})</span>
             </div>
-          )}
+          </div>
+          <button className="logout-button-casino" onClick={handleCerrarSesion}>
+            🚪 SALIR
+          </button>
         </div>
+
+        {/* Botones visibles solo para administradores */}
+        {isAdmin && (
+          <>
+            <button className="analisis-button" onClick={handleModeloAnalisisClick}>
+              📊 ANÁLISIS MODELO A
+            </button>
+
+            <button className="modelo-d-button" onClick={handleModeloDClick}>
+              🔄 ANÁLISIS MODELO D
+            </button>
+
+            <button className="admin-modelo-a-button" onClick={handleAdminModeloAClick}>
+              ⚙️ ADMIN MODELO A
+            </button>
+          </>
+        )}
 
         <div className="slot-machine-body">
           
@@ -542,7 +654,7 @@ function Casino() {
                 className={`spin-button ${spinning ? 'spin-active' : ''}`}
                 onClick={spinReels}
                 // VERIFICAR CRÉDITOS DESDE BD
-                disabled={spinning || (userData?.credits || 0) < totalBet}
+                disabled={spinning || (user?.saldo || 0) < totalBet}
               >
                 <span className="spin-text">{spinning ? 'SPINNING...' : 'SPIN'}</span>
               </button>
